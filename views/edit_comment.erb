@@ -1,0 +1,8 @@
+<h2>Editing Comment for Post: <%= @post[:title] %></h2>
+<form action="/posts/<%= @post[:id] %>/comments/<%= @comment[:id] %>" method="post">
+  <label>Edit the comment below:</label></br>
+  <textarea name="comment" rows="5" cols="50"><%= @comment[:content] %></textarea>
+  <input type="hidden" name="user_id" value="<%= current_user_id %>">
+  <input type="submit" value="Update Comment">
+</form>
+<a href="/posts/<%= @post[:id] %>/comments">Cancel</a>
