@@ -7,7 +7,7 @@ class DatabasePersistance
     sql = <<~SQL
       SELECT id, title, content, author_id, creation_date, update_date
         FROM posts
-        ORDER BY creation_date DESC
+        ORDER BY update_date DESC NULLS LAST, creation_date DESC
     SQL
     result = query(sql)
     return if result.ntuples == 0
@@ -111,7 +111,7 @@ class DatabasePersistance
       SELECT id, content, creation_date, update_date, author_id
         FROM comments
         WHERE post_id = $1
-        ORDER BY creation_date DESC
+        ORDER BY update_date DESC NULLS LAST, creation_date DESC
     SQL
     result = query(sql, post_id)
     return [] if result.ntuples == 0
