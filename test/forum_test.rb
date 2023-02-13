@@ -54,7 +54,10 @@ class Forum < Minitest::Test
     post = @db.find_post(1)
     comment = @db.find_comment(1)
     
-    get '/posts/1/comments'
+    get '/posts/1'
+    assert_equal 302, last_response.status
+    
+    get last_response['Location']
     assert_equal 200, last_response.status
     assert_includes last_response.body, "<h2>#{post[:title]}</h2>"
     assert_includes last_response.body, "<p>#{post[:content]}</p>"
