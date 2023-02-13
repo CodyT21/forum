@@ -138,6 +138,7 @@ post '/posts' do
   else
     author_id = params[:user_id].to_i
     @storage.add_post(title, content, author_id)
+    session[:message] = 'Post added successfully."
 
     redirect '/posts'
   end
