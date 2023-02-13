@@ -90,6 +90,11 @@ get '/posts/new' do
 end
 
 # Render individual post with comments
+get '/posts/:post_id' do
+  post_id = params[:post_id].to_i
+  redirect "/posts/#{post_id}/comments"
+end
+
 get '/posts/:post_id/comments' do
   post_id = params[:post_id].to_i
   @post = @storage.find_post(post_id)
@@ -233,88 +238,3 @@ post '/posts/:post_id/comments/:comment_id' do
     redirect "/posts/#{post_id}/comments"
   end
 end
-
-# # render new shopping list page
-# get '/lists/new' do
-#   erb :new_list
-# end
-
-# # add a new shopping list
-# post '/lists' do
-#   store = params[:store].strip
-
-#   error = error_for_list_store(store)
-#   if error
-#     session[:message] = error
-#     erb :new_list
-#   else
-#     @storage.add_new_list(store)
-#     session[:message] = 'The shopping list was succesfully created.'
-#     redirect '/lists'
-#   end
-# end
-
-# # render edit shopping list page
-# get '/lists/:list_id/edit' do
-#   list_id = params[:list_id].to_i
-#   @list = @storage.find_list(list_id)
-
-#   erb :edit_list
-# end
-
-# # edit a shopping list store name
-# post '/lists/:list_id' do
-#   list_id = params[:list_id].to_i
-#   store = params[:store].strip
-
-#   error = error_for_list_store(store)
-#   if error
-#     @list = @storage.find_list(list_id)
-#     session[:message] = error
-#     erb :edit_list
-#   else
-#     @storage.update_list(list_id, store)
-#     session[:message] = 'The shopping list store was updated succesfully.'
-#     redirect '/lists'
-#   end
-# end
-
-# #toggle purchased status for list item
-# post '/lists/:list_id/items/:item_id/purchased' do
-#   list_id = params[:list_id].to_i
-#   item_id = params[:item_id].to_i
-#   @storage.toggle_purchased_status(item_id)
-#   session[:message] = 'Toggled purchased status successfully.'
-
-#   redirect "/lists/#{list_id}/items"
-# end
-
-# # render edit shopping list item page
-# get '/lists/:list_id/items/:item_id/edit' do
-#   list_id = params[:list_id].to_i
-#   item_id = params[:item_id].to_i
-#   @list = @storage.find_list(list_id)
-#   @item = @storage.find_list_item(item_id)
-
-#   erb :edit_list_item
-# end
-
-# # edit a shopping list item
-# post '/lists/:list_id/items/:item_id' do
-#   list_id = params[:list_id].to_i
-#   item_id = params[:item_id].to_i
-#   item = params[:item].strip
-#   quantity = params[:quantity].to_i
-
-#   error = error_for_list_item(item, quantity, list_id, new_item=false)
-#   if error
-#     @list = @storage.find_list(list_id)
-#     @item = @storage.find_list_item(item_id)
-#     session[:message] = error
-#     erb :edit_list_item
-#   else
-#     @storage.update_list_item(item_id, item, quantity)
-#     session[:message] = 'The shopping list store was updated succesfully.'
-#     redirect "/lists/#{list_id}/items"
-#   end
-# end
