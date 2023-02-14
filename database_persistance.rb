@@ -104,9 +104,9 @@ class DatabasePersistance
     query(sql, content, current_datetime, comment_id)
   end
 
-  def find_user(username, password)
+  def find_user(username)
     sql = <<~SQL
-      SELECT id, username, password
+      SELECT id, username
         FROM users
         WHERE username ILIKE $1 AND password = $2
     SQL
@@ -116,6 +116,21 @@ class DatabasePersistance
     tuple = result.first
     { id: tuple['id'].to_i,
       username: tuple['username'] 
+    }
+  end
+  
+  def find_user_credentials(username)
+    sql = <<~SQL
+      SELECT username, password
+        FROM users
+        WHERE username ILIKE $1
+    SQL
+    result = query(sql, username)
+    return {} if result.ntuples == 0
+
+    tuple = result.first
+    { username: tuple['username'],
+      password: tuple['password']
     }
   end
 
