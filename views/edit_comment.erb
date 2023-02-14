@@ -1,7 +1,9 @@
 <h2>Editing Comment for Post: <%= @post[:title] %></h2>
 <form action="/posts/<%= @post[:id] %>/comments/<%= @comment[:id] %>" method="post">
-  <label for="content">Edit the comment below:</label></br>
-  <textarea name="content" rows="5" cols="50"><%= @comment[:content] %></textarea>
+  <div>
+    <label for="content">Edit the comment below:</label></br>
+    <textarea name="content" rows="5" cols="50"><%= @comment[:content] %></textarea>
+  </div>
   <input type="hidden" name="user_id" value="<%= @user[:id] %>">
   <input type="submit" value="Update Comment">
 </form>
