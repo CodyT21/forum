@@ -223,6 +223,37 @@ class Forum < Minitest::Test
     assert_equal 'Comment does not exist.', session[:message]
   end
   
-  def test_invalid_user_edit_post
+  def test_invalid_user_edit_or_delete_post
+    @db.add_user('Test User 2', 'password')
+    new_user = @db.find_user('Test User 2', 'password')
+    get '/posts', {}, { 'rack.session' => { user: new_user } }
+    refute_includes last_response.body, %q(<input type="submit" value="Delete")
+    refute_includes last_response.body, %q(<a href="posts/1/edit">Edit</a>)
+
+    @db.add_post('Second Test Post', 'Content for second test post.', 2)
+    get '/posts', {}, { 'rack.session' => { user: new_user } }
+    assert_includes last_response.body, %q(<input type="submit" value="Delete")
+    assert_includes last_response.body, %q(<a href="/posts/2/edit">Edit</a>)
+  end
+
+  def test_render_login
+  end
+
+  def test_login_user
+  end
+
+  def test_footer_with_login
+  end
+
+  def test_footer_without_login
+  end
+
+  def test_create_new_user
+  end
+
+  def test_create_new_user_duplicate_username
+  end
+
+  def test_create_new_user_invalid_username
   end
 end
