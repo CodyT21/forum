@@ -24,7 +24,7 @@
               <%= comment[:date] %>
             <% end %>
           </td>
-          <% if current_user_id == comment[:author_id] %>
+          <% if @user[:id] == comment[:author_id] %>
             <td><a href="/posts/<%= @post[:id] %>/comments/<%= comment[:id] %>/edit">Edit</a></td>
             <td>
               <form action="/posts/<%= @post[:id] %>/comments/<%= comment[:id] %>/delete" method="post">
@@ -43,9 +43,20 @@
 <h3>Add a Comment</h2>
 <form action="/posts/<%= @post[:id] %>/comments" method="post">
   <label>Enter new comment below:</label></br>
-  <textarea name="comment" rows="5" cols="50"></textarea>
-  <input type="hidden" name="user_id" value="<%= current_user_id %>">
+  <textarea name="content" rows="5" cols="50"></textarea>
+  <input type="hidden" name="user_id" value="<%= @user[:id] %>">
   <input type="submit" value="Submit">
 </form>
 
-<a href="/posts">Return to Posts</a>
+<a href="/posts"><button>Return to Posts</button></a>
+
+<% content_for :footer_login do %>
+  <% if @user.key?(:id) %>
+    <p>Logged in as <%= @user[:username] %></p>
+    <form action="/users/logout" method="post">
+      <input type="submit" value="Logout">
+    </form>
+  <% else %>
+    <a href="/users/login"><button>Login</button></a>
+  <% end %>
+<% end %>

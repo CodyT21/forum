@@ -1,5 +1,5 @@
 require 'sinatra'
-# require 'sinatra/content_for'
+require 'sinatra/content_for'
 require 'tilt/erubis'
 # require 'bcrypt'
 
@@ -8,6 +8,8 @@ require_relative 'database_persistance'
 configure do
   enable :sessions
   set :session_secret, 'secret'
+
+  set :erb, :escape_html => true
 end
 
 configure(:development) do
@@ -16,43 +18,32 @@ configure(:development) do
 end
 
 helpers do
-  def current_user_id
-    session[:username] = 'admin' # need to flush this out and implement this for many users
-    username = session[:username]
-    @storage.find_user_id(username)
+end
+
+
+# def valid_credentials?(username, password)
+#   credentials = @storage.find_user(username, password)
+#   credentials.empty?
+#   # return false unless credentials.key?(:user_id)
+    
+#   # bcrypt_password = BCrypt::Password.new(credentials[:user_id])
+#   # bcrypt_password == password
+# end
+
+def user_signed_in?
+  session.key?(:user)
+end
+
+def require_user_signin
+  unless user_signed_in?
+    session[:message] = 'You must be signed in to perform this action.'
+    redirect '/'
   end
 end
 
-def load_user_credentials
-  user_path = if ENV['RACK_ENV'] == 'test'
-                File.expand_path('..test/users/', __FILE__)
-              else
-                File.expand_path('..users', __FILE__)
-              end
-  YAML.load_file(File.join(user_path, 'users.yml'))
-end
-
-def valid_credentials?(user_id, password)
-  credentials = load_user_credentials
-  return false unless credentials.key?(user_id)
-    
-  bcrypt_password = BCrypt::Password.new(credentials[user_id])
-  bcrypt_password == password
-end
-
-# def user_signed_in?
-#   session.key?(:user_id)
-# end
-
-# def require_user_signin
-#   unless user_signed_in?
-#     session[:message] = 'You must be signed in to perform that action.'
-#     redirect '/'
-#   end
-# end
-
 before do
   @storage = DatabasePersistance.new()
+  @user = session[:user] || {}
 end
 
 def error_for_comment(comment)
@@ -86,6 +77,8 @@ end
 
 # Render add new post page
 get '/posts/new' do
+  require_user_signin
+
   erb :new_post
 end
 
@@ -96,6 +89,8 @@ get '/posts/:post_id' do
 end
 
 get '/posts/:post_id/comments' do
+  require_user_signin
+
   post_id = params[:post_id].to_i
   @post = @storage.find_post(post_id)
 
@@ -110,7 +105,7 @@ end
 # Add a new comment to a post
 post '/posts/:post_id/comments' do
   post_id = params[:post_id].to_i
-  comment = params[:comment].strip
+  comment = params[:content].strip
   
   error = error_for_comment(comment)
   if error
@@ -138,7 +133,7 @@ post '/posts' do
   else
     author_id = params[:user_id].to_i
     @storage.add_post(title, content, author_id)
-    session[:message] = 'Post added successfully."
+    session[:message] = 'Post added successfully.'
 
     redirect '/posts'
   end
@@ -165,6 +160,8 @@ end
 
 # Render edit post page
 get '/posts/:post_id/edit' do
+  require_user_signin
+
   post_id = params[:post_id].to_i
   @post = @storage.find_post(post_id)
 
@@ -201,6 +198,8 @@ end
 
 # Render edit comment page
 get '/posts/:post_id/comments/:comment_id/edit' do
+  require_user_signin
+
   post_id = params[:post_id].to_i
   comment_id = params[:comment_id].to_i
   @post = @storage.find_post(post_id)
@@ -220,7 +219,7 @@ end
 post '/posts/:post_id/comments/:comment_id' do
   post_id = params[:post_id].to_i
   comment_id = params[:comment_id].to_i
-  content = params[:comment].strip
+  content = params[:content].strip
   user_id = params[:user_id].to_i
   @post = @storage.find_post(post_id)
   @comment = @storage.find_comment(comment_id)
@@ -238,4 +237,43 @@ post '/posts/:post_id/comments/:comment_id' do
     end
     redirect "/posts/#{post_id}/comments"
   end
+end
+
+# Render signin page
+get '/users/login' do
+  erb :login
+end
+
+# Log in a user
+post '/users/login' do
+  username = params[:username]
+  password = params[:password]
+  user = @storage.find_user(username, password)
+
+  if user.empty?
+    session[:message] = 'Invalid username or password.'
+    erb :login
+  else
+    session[:user] = user
+    session[:message] = 'Login successful.'
+    redirect '/posts'
+  end
+end
+
+# Log Out a user
+post '/users/logout' do
+  session.delete(:user)
+  session[:message] = 'You have been logged out succesfully.'
+  redirect '/posts'
+end
+
+
+# Render create user page
+get '/users/new' do
+  erb :new_user
+end
+
+# Create a new user
+post '/users' do
+
 end

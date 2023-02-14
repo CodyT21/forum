@@ -21,6 +21,8 @@ module DatabaseConnection
     @db.exec("ALTER SEQUENCE posts_id_seq RESTART WITH 1;")
     @db.exec("DELETE FROM comments;")
     @db.exec("ALTER SEQUENCE comments_id_seq RESTART WITH 1;")
+    @db.exec("DELETE FROM users;")
+    @db.exec("ALTER SEQUENCE users_id_seq RESTART WITH 1;")
   end
 
   def disconnect

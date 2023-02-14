@@ -1,8 +1,19 @@
 <h2>Editing Comment for Post: <%= @post[:title] %></h2>
 <form action="/posts/<%= @post[:id] %>/comments/<%= @comment[:id] %>" method="post">
-  <label>Edit the comment below:</label></br>
-  <textarea name="comment" rows="5" cols="50"><%= @comment[:content] %></textarea>
-  <input type="hidden" name="user_id" value="<%= current_user_id %>">
+  <label for="content">Edit the comment below:</label></br>
+  <textarea name="content" rows="5" cols="50"><%= @comment[:content] %></textarea>
+  <input type="hidden" name="user_id" value="<%= @user[:id] %>">
   <input type="submit" value="Update Comment">
 </form>
-<a href="/posts/<%= @post[:id] %>/comments">Cancel</a>
+<a href="/posts/<%= @post[:id] %>/comments"><button>Cancel</button></a>
+
+<% content_for :footer_login do %>
+  <% if @user.key?(:id) %>
+    <p>Logged in as <%= @user[:username] %></p>
+    <form action="/users/logout" method="post">
+      <input type="submit" value="Logout">
+    </form>
+  <% else %>
+    <a href="/users/login"><button>Login</button></a>
+  <% end %>
+<% end %>

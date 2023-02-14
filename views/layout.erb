@@ -10,7 +10,10 @@
     <% end %>
     <h1>Forum Posts</h1>
     <main>
-      <%= yield %>
+      <%== yield %>
     </main>
   </body>
+  <footer>
+    <%== yield_content :footer_login %>
+  </footer>
 </html>

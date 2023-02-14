@@ -104,6 +104,29 @@ class DatabasePersistance
     query(sql, content, current_datetime, comment_id)
   end
 
+  def find_user(username, password)
+    sql = <<~SQL
+      SELECT id, username, password
+        FROM users
+        WHERE username ILIKE $1 AND password = $2
+    SQL
+    result = @db.exec_params(sql, [username, password]) # do not log sensitive info
+    return {} if result.ntuples == 0
+
+    tuple = result.first
+    { id: tuple['id'].to_i,
+      username: tuple['username'] 
+    }
+  end
+
+  def add_user(username, password)
+    sql = <<~SQL
+      INSERT INTO users (username, password)
+        VALUES ($1, $2)
+    SQL
+    @db.exec_params(sql, [username, password])
+  end
+
   private
 
   def find_post_comments(post_id)

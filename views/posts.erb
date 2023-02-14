@@ -23,7 +23,7 @@
               <%= post[:date] %>
             <% end %>
           </td>
-          <% if current_user_id == post[:author_id] %>
+          <% if @user[:id] == post[:author_id] %>
             <td><a href="/posts/<%= post[:id] %>/edit">Edit</a></td>
             <td>
               <form action="/posts/<%= post[:id] %>/delete" method="post">
@@ -38,4 +38,15 @@
 <% else %>
   <p>No posts to display.</p>
 <% end %>
-<a href="/posts/new">Create New Post</a>
+<a href="/posts/new"><button>Create New Post</button></a>
+
+<% content_for :footer_login do %>
+  <% if @user.key?(:id) %>
+    <p>Logged in as <%= @user[:username] %></p>
+    <form action="/users/logout" method="post">
+      <input type="submit" value="Logout">
+    </form>
+  <% else %>
+    <a href="/users/login"><button>Login</button></a>
+  <% end %>
+<% end %>

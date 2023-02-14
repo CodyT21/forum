@@ -5,7 +5,18 @@
 
   <label>Enter new comment below:</label></br>
   <textarea name="content" rows="5" cols="50"> </textarea>
-  <input type="hidden" name="user_id" value="<%= current_user_id %>">
+  <input type="hidden" name="user_id" value="<%= @user[:id] %>">
   <input type="submit" value="Create Post">
 </form>
-<a href="/posts">Cancel</a>
+<a href="/posts"><button>Cancel</button></a>
+
+<% content_for :footer_login do %>
+  <% if @user.key?(:id) %>
+    <p>Logged in as <%= @user[:username] %></p>
+    <form action="/users/logout" method="post">
+      <input type="submit" value="Logout">
+    </form>
+  <% else %>
+    <a href="/users/login"><button>Login</button></a>
+  <% end %>
+<% end %>
