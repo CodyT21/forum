@@ -1,7 +1,7 @@
 require 'sinatra'
 require 'sinatra/content_for'
 require 'tilt/erubis'
-# require 'bcrypt'
+require 'bcrypt'
 
 require_relative 'database_persistance'
 
@@ -20,15 +20,13 @@ end
 helpers do
 end
 
-
-# def valid_credentials?(username, password)
-#   credentials = @storage.find_user(username, password)
-#   credentials.empty?
-#   # return false unless credentials.key?(:user_id)
+def valid_credentials?(username, password)
+  credentials = @storage.find_user_credentials(username)
+  return false unless credentials.key?(:username)
     
-#   # bcrypt_password = BCrypt::Password.new(credentials[:user_id])
-#   # bcrypt_password == password
-# end
+  bcrypt_password = BCrypt::Password.new(credentials[:password])
+  bcrypt_password == password
+end
 
 def user_signed_in?
   session.key?(:user)
@@ -260,15 +258,15 @@ end
 post '/users/login' do
   username = params[:username]
   password = params[:password]
-  user = @storage.find_user(username, password)
+  # user = @storage.find_user(username, password)
 
-  if user.empty?
-    session[:message] = 'Invalid username or password.'
-    erb :login
-  else
+  if user.valid_credentials?
+    user = @storage.find_user(username)
     session[:user] = user
     session[:message] = 'Login successful.'
-    redirect '/posts'
+  else
+    session[:message] = 'Invalid username or password.'
+    erb :login
   end
 end
 
@@ -295,7 +293,8 @@ post '/users' do
     session[:message] = error
     erb :new_user
   else
-    @storage.add_user(username, password)
+    stored_hash = BCrypt::Password.create(password)
+    @storage.add_user(username, stored_hash)
     session[:message] = 'New user created successfully. Please log in to continue.'
     redirect '/users/login'
   end
