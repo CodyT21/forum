@@ -64,6 +64,18 @@ def error_for_post(title, content)
   end
 end
 
+def error_for_new_user(username, password)
+  if username.size < 2
+    'Username must be at least 2 characters in length.'
+  elsif @storage.username_exists?(username)
+    "#{username} already exists. Please enter a different name."
+  elsif password.size < 8
+    'Password must be at least 8 characters long.'
+  else
+    return
+  end
+end
+
 # Render home page
 get '/' do
   redirect '/posts'
@@ -275,5 +287,16 @@ end
 
 # Create a new user
 post '/users' do
+  username = params[:username].strip
+  password = params[:password].strip
 
+  error = error_for_new_user(username, password)
+  if error
+    session[:message] = error
+    erb :new_user
+  else
+    @storage.add_user(username, password)
+    session[:message] = 'New user created successfully. Please log in to continue.'
+    redirect '/users/login'
+  end
 end

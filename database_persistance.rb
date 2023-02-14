@@ -127,6 +127,12 @@ class DatabasePersistance
     @db.exec_params(sql, [username, password])
   end
 
+  def username_exists?(username)
+    sql = "SELECT id FROM users WHERE username ILIKE $1"
+    result = query(sql, username)
+    result.ntuples > 0
+  end
+
   private
 
   def find_post_comments(post_id)

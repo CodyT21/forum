@@ -1,0 +1,12 @@
+<h2>Add a New User</h2>
+<form action="/users" method="post">
+  <div>
+    <label for="username">Username:</label>
+    <input type="text" name="username" value="">
+  </div>
+  <div>
+    <label for="password">Password (must be at least 8 characters):</label>
+    <input type="password" name="password" minlength="8" required>
+  </div>
+  <input type="submit" value="Create User">
+</form>
