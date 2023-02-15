@@ -1,7 +1,7 @@
 # forum
 
 ## Project Description ##
-This is a basic forum that allow for displaying, creating, editing, and deleting new posts and associated comments. Posts and comments are both stored using a Postgresql SQL database.
+This is a basic forum that allow for displaying, creating, editing, and deleting new posts and associated comments. Posts and comments are both stored using a PostgreSQL relational database consisting of 3 tables: posts, comments, and users. Posts contain columns for a unique id, title, content, creation_date, update_date, and author_id. Comments contains columns for a unique id, content, creation_date, update_date, and author_id. Users contain columns for a unique id, unique username, and password which will contained a stored hash of the user password for better data protection.
 
 User accounts consist of an unique user id, unique username, and a password, stored as a hashed value within the database using the BCrypt hashing algorithm. Editing and deleting posts and comments are only available if the current logged in user matches the author of the associated post/comment.
 
