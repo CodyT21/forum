@@ -2,6 +2,7 @@ ENV['RACK_ENV'] = 'test'
 
 require 'minitest/autorun'
 require 'rack/test'
+require 'bcrypt'
 require 'pg'
 
 require_relative '../forum'
@@ -14,7 +15,7 @@ class Forum < Minitest::Test
     @db.clear
 
     # test data
-    @db.add_user('Test User', 'password')
+    add_new_user('TestUser', 'password')
     @db.add_post('Test Post', 'This is a test post.', 1)
     @db.add_comment_to_post(1, 1, 'Test comment')
   end
@@ -24,8 +25,13 @@ class Forum < Minitest::Test
   end
   
   def test_user_session
-    user = @db.find_user('Test User', 'password')
+    user = @db.find_user('TestUser')
     { 'rack.session' => { user: user } }
+  end
+
+  def add_new_user(username, password)
+    stored_hash = BCrypt::Password.create(password)
+    @db.add_user(username, stored_hash)
   end
 
   def teardown
@@ -224,8 +230,9 @@ class Forum < Minitest::Test
   end
   
   def test_invalid_user_edit_or_delete_post
-    @db.add_user('Test User 2', 'password')
-    new_user = @db.find_user('Test User 2', 'password')
+    add_new_user('TestUser2', 'password')
+
+    new_user = @db.find_user('TestUser2')
     get '/posts', {}, { 'rack.session' => { user: new_user } }
     refute_includes last_response.body, %q(<input type="submit" value="Delete")
     refute_includes last_response.body, %q(<a href="posts/1/edit">Edit</a>)
@@ -237,23 +244,73 @@ class Forum < Minitest::Test
   end
 
   def test_render_login
+    get '/users/login'
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, %q(<input name="username" type="text" value="">)
+    assert_includes last_response.body, %q(<input name="password" type="password" value="")
   end
 
   def test_login_user
+    post '/users/login', { username: 'TestUser', password: 'password' }
+    assert_equal 302, last_response.status
+    assert_equal 'Login successful.', session[:message]
+
+    get last_response['Location']
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "<p>Logged in as TestUser</p>"
+    assert_includes last_response.body, %q(<input type="submit" value="Logout")
+    refute_nil session[:user]
   end
 
-  def test_footer_with_login
+  def test_login_user_invalid_credentials
+    post '/users/login', { username: 'TestUser', password: '12345' }
+    assert_includes last_response.body, 'Invalid username or password.'
+    assert_nil session[:user]
   end
 
-  def test_footer_without_login
+  def test_logout_user
+    get '/posts', {}, test_user_session
+    refute_nil session[:user]
+    assert_includes last_response.body, %q(<input type="submit" value="Logout")
+    refute_includes last_response.body, "<button>Login</button>"
+
+    post '/users/logout'
+    assert_equal 302, last_response.status
+    assert_equal 'You have been logged out succesfully.', session[:message]
+
+    get last_response['Location']
+    assert_nil session[:user]
+    refute_includes last_response.body, %q(<input type="submit" value="Logout")
+    assert_includes last_response.body, "<button>Login</button>"
+  end
+
+  def test_render_create_new_user_page
+    get '/users/new'
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, %q(<input type="text" name="username" value="">)
+    assert_includes last_response.body, %q(<input type="password" name="password" minlength="8" required>)
   end
 
   def test_create_new_user
+    post '/users', { username: 'TestUser2', password: '12345678' }
+    assert_equal 302, last_response.status
+    assert_equal 'New user created successfully. Please log in to continue.', session[:message]
+
+    post last_response['Location'], { username: 'TestUser2', password: '12345678' }
+    assert_equal 'Login successful.', session[:message]
+
+    get last_response['Location']
+    assert_includes last_response.body, 'Logged in as TestUser2'
+    refute_nil session[:user]
   end
 
   def test_create_new_user_duplicate_username
+    post '/users', { username: 'TestUser', password: '12345678' }
+    assert_includes last_response.body, 'TestUser already exists. Please enter a different name.'
   end
 
   def test_create_new_user_invalid_username
+    post '/users', { username: 'T', password: '12345678' }
+    assert_includes last_response.body, 'Username must be between 2 and 50 characters in length.'
   end
 end
