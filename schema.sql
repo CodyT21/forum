@@ -1,7 +1,7 @@
 CREATE TABLE users (
   id serial PRIMARY KEY,
-  username varchar(100) NOT NULL UNIQUE,
-  password varchar(50) NOT NULL
+  username varchar(50) NOT NULL UNIQUE,
+  password text NOT NULL
 );
 
 CREATE TABLE posts (

@@ -108,9 +108,9 @@ class DatabasePersistance
     sql = <<~SQL
       SELECT id, username
         FROM users
-        WHERE username ILIKE $1 AND password = $2
+        WHERE username ILIKE $1
     SQL
-    result = @db.exec_params(sql, [username, password]) # do not log sensitive info
+    result = @db.exec_params(sql, [username]) # do not log sensitive info
     return {} if result.ntuples == 0
 
     tuple = result.first

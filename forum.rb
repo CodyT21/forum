@@ -63,8 +63,8 @@ def error_for_post(title, content)
 end
 
 def error_for_new_user(username, password)
-  if username.size < 2
-    'Username must be at least 2 characters in length.'
+  if !(2..50).cover?(username.size)
+    'Username must be between 2 and 50 characters in length.'
   elsif @storage.username_exists?(username)
     "#{username} already exists. Please enter a different name."
   elsif password.size < 8
@@ -260,10 +260,11 @@ post '/users/login' do
   password = params[:password]
   # user = @storage.find_user(username, password)
 
-  if user.valid_credentials?
+  if valid_credentials?(username, password)
     user = @storage.find_user(username)
     session[:user] = user
     session[:message] = 'Login successful.'
+    redirect '/posts'
   else
     session[:message] = 'Invalid username or password.'
     erb :login
