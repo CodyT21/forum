@@ -21,7 +21,7 @@ helpers do
 end
 
 def valid_credentials?(username, password)
-  credentials = @storage.find_user_credentials(username)
+  credentials = @storage.find_user(username)
   return false unless credentials.key?(:username)
     
   bcrypt_password = BCrypt::Password.new(credentials[:password])
@@ -258,11 +258,10 @@ end
 post '/users/login' do
   username = params[:username]
   password = params[:password]
-  # user = @storage.find_user(username, password)
 
   if valid_credentials?(username, password)
     user = @storage.find_user(username)
-    session[:user] = user
+    session[:user] = { id: user[:id], username: user[:username] }
     session[:message] = 'Login successful.'
     redirect '/posts'
   else

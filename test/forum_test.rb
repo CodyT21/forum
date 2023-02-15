@@ -24,9 +24,9 @@ class Forum < Minitest::Test
     last_request.env['rack.session']
   end
   
-  def test_user_session
-    user = @db.find_user('TestUser')
-    { 'rack.session' => { user: user } }
+  def test_user_session(username='TestUser')
+    user = @db.find_user(username)
+    { 'rack.session' => { user: { id: user[:id], username: user[:username] } } }
   end
 
   def add_new_user(username, password)
@@ -232,13 +232,12 @@ class Forum < Minitest::Test
   def test_invalid_user_edit_or_delete_post
     add_new_user('TestUser2', 'password')
 
-    new_user = @db.find_user('TestUser2')
-    get '/posts', {}, { 'rack.session' => { user: new_user } }
+    get '/posts', {}, test_user_session('TestUser2')
     refute_includes last_response.body, %q(<input type="submit" value="Delete")
     refute_includes last_response.body, %q(<a href="posts/1/edit">Edit</a>)
 
     @db.add_post('Second Test Post', 'Content for second test post.', 2)
-    get '/posts', {}, { 'rack.session' => { user: new_user } }
+    get '/posts', {}, test_user_session('TestUser2')
     assert_includes last_response.body, %q(<input type="submit" value="Delete")
     assert_includes last_response.body, %q(<a href="/posts/2/edit">Edit</a>)
   end

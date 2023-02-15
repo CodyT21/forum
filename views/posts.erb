@@ -1,4 +1,6 @@
-<% if @posts %>
+<% if @posts.empty? %>
+  <p>No posts to display.</p>
+<% else %>
   <table style="border-spacing: 30px;">
     <thead>
       <tr>
@@ -35,8 +37,6 @@
       <% end %>
     </tbody>
   </table>
-<% else %>
-  <p>No posts to display.</p>
 <% end %>
 <a href="/posts/new"><button>Create New Post</button></a>
 

@@ -5,55 +5,32 @@ class DatabasePersistance
 
   def find_posts
     sql = <<~SQL
-      SELECT id, title, content, author_id, creation_date, update_date
-        FROM posts
-        ORDER BY update_date DESC NULLS LAST, creation_date DESC
+      SELECT p.*, u.id AS "user_id", u.username
+        FROM posts p
+        LEFT JOIN users u ON p.author_id = u.id
+        ORDER BY p.update_date DESC NULLS LAST, p.creation_date DESC
     SQL
     result = query(sql)
-    return if result.ntuples == 0
+    return [] if result.ntuples == 0
 
     result.map do |tuple|
-      tuple_to_hash(tuple)
+      tuple_to_hash_for_post(tuple)
     end
   end
 
   def find_post(post_id)
     sql = <<~SQL
-      SELECT id, title, content, author_id, creation_date, update_date
-        FROM posts
-        WHERE id = $1
+      SELECT p.*, u.username
+        FROM posts p
+        INNER JOIN users u ON p.author_id = u.id
+        WHERE p.id = $1
     SQL
     result = query(sql, post_id)
     return if result.ntuples == 0
 
-    tuple_to_hash(result.first)
-  end
-
-  def find_comment(comment_id)
-    sql = <<~SQL
-      SELECT id, content, creation_date, update_date, author_id
-        FROM comments
-        WHERE id = $1
-    SQL
-    result = query(sql, comment_id)
-    return if result.ntuples == 0
-
-    tuple = result.first
-    { id: tuple['id'].to_i,
-      content: tuple['content'],
-      date: tuple['creation_date'],
-      update_date: tuple['update_date'],
-      author_id: tuple['author_id'].to_i,
-      author: find_username(tuple['author_id']) 
-    }
-  end
-
-  def add_comment_to_post(post_id, author_id, comment)
-    sql = <<~SQL
-      INSERT INTO comments (post_id, author_id, content)
-        VALUES ($1, $2, $3)
-    SQL
-    query(sql, post_id, author_id, comment)
+    post_hash = tuple_to_hash_for_post(result.first)
+    post_hash[:comments] = find_post_comments(post_id)
+    post_hash
   end
 
   def add_post(title, content, author_id)
@@ -62,26 +39,6 @@ class DatabasePersistance
         VALUES ($1, $2, $3)
     SQL
     query(sql, title, content, author_id)
-  end
-
-  def find_user_id(username)
-    sql = <<~SQL
-      SELECT id
-        FROM users
-        WHERE username ILIKE $1
-    SQL
-    result = query(sql, username)
-    result.first['id'].to_i
-  end
-
-  def delete_post(post_id)
-    sql = "DELETE FROM posts WHERE id = $1"
-    query(sql, post_id)
-  end
-
-  def delete_comment(comment_id)
-    sql = "DELETE FROM comments WHERE id = $1"
-    query(sql, comment_id)
   end
 
   def update_post(post_id, title, content)
@@ -94,6 +51,32 @@ class DatabasePersistance
     query(sql, title, content, current_datetime, post_id)
   end
 
+  def delete_post(post_id)
+    sql = "DELETE FROM posts WHERE id = $1"
+    query(sql, post_id)
+  end
+
+  def find_comment(comment_id)
+    sql = <<~SQL
+      SELECT c.*, u.username
+        FROM comments c
+        INNER JOIN users u ON c.author_id = u.id
+        WHERE c.id = $1
+    SQL
+    result = query(sql, comment_id)
+    return if result.ntuples == 0
+
+    tuple_to_hash_for_comment(result.first)
+  end
+
+  def add_comment_to_post(post_id, author_id, comment)
+    sql = <<~SQL
+      INSERT INTO comments (post_id, author_id, content)
+        VALUES ($1, $2, $3)
+    SQL
+    query(sql, post_id, author_id, comment)
+  end
+
   def update_comment(comment_id, content)
     current_datetime = Time.new.strftime("%Y-%m-%d %k:%M:%S")
     sql = <<~SQL
@@ -104,24 +87,14 @@ class DatabasePersistance
     query(sql, content, current_datetime, comment_id)
   end
 
-  def find_user(username)
-    sql = <<~SQL
-      SELECT id, username
-        FROM users
-        WHERE username ILIKE $1
-    SQL
-    result = @db.exec_params(sql, [username]) # do not log sensitive info
-    return {} if result.ntuples == 0
-
-    tuple = result.first
-    { id: tuple['id'].to_i,
-      username: tuple['username'] 
-    }
+  def delete_comment(comment_id)
+    sql = "DELETE FROM comments WHERE id = $1"
+    query(sql, comment_id)
   end
   
-  def find_user_credentials(username)
+  def find_user(username)
     sql = <<~SQL
-      SELECT username, password
+      SELECT *
         FROM users
         WHERE username ILIKE $1
     SQL
@@ -129,7 +102,8 @@ class DatabasePersistance
     return {} if result.ntuples == 0
 
     tuple = result.first
-    { username: tuple['username'],
+    { id: tuple['id'].to_i,
+      username: tuple['username'],
       password: tuple['password']
     }
   end
@@ -139,7 +113,7 @@ class DatabasePersistance
       INSERT INTO users (username, password)
         VALUES ($1, $2)
     SQL
-    @db.exec_params(sql, [username, password])
+    @db.exec_params(sql, [username, password]) # do not log sensitive info
   end
 
   def username_exists?(username)
@@ -152,8 +126,9 @@ class DatabasePersistance
 
   def find_post_comments(post_id)
     sql = <<~SQL
-      SELECT id, content, creation_date, update_date, author_id
-        FROM comments
+      SELECT c.*, u.username 
+        FROM comments c
+        INNER JOIN users u ON c.author_id = u.id
         WHERE post_id = $1
         ORDER BY update_date DESC NULLS LAST, creation_date DESC
     SQL
@@ -161,36 +136,28 @@ class DatabasePersistance
     return [] if result.ntuples == 0
 
     result.map do |tuple|
-      { id: tuple['id'].to_i,
-        content: tuple['content'],
-        date: tuple['creation_date'],
-        update_date: tuple['update_date'],
-        author_id: tuple['author_id'].to_i,
-        author: find_username(tuple['author_id']) 
-      }
+      tuple_to_hash_for_comment(tuple)
     end
   end
 
-  def tuple_to_hash(tuple)
-    post_id = tuple['id'].to_i
-    user_id = tuple['author_id'].to_i
-    comments = find_post_comments(post_id)
-    { id: post_id,
+  def tuple_to_hash_for_post(tuple)
+    { id: tuple['id'].to_i,
       title: tuple['title'],
       content: tuple['content'],
       date: tuple['creation_date'],
       update_date: tuple['update_date'],
-      author_id: user_id,
-      author: find_username(user_id),
-      comments: comments 
+      author_id: tuple['user_id'].to_i,
+      author: tuple['username'],
     }
   end
 
-  def find_username(user_id)
-    sql = "SELECT username FROM users WHERE id = $1"
-    result = query(sql, user_id)
-    result.first['username']
+  def tuple_to_hash_for_comment(tuple)
+    { id: tuple['id'].to_i,
+      content: tuple['content'],
+      date: tuple['creation_date'],
+      update_date: tuple['update_date'],
+      author_id: tuple['author_id'].to_i,
+      author: tuple['username'] 
+    }
   end
 end
-
-    
