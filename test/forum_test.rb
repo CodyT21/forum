@@ -255,7 +255,9 @@ class Forum < Minitest::Test
     assert_equal 'Login successful.', session[:message]
 
     get last_response['Location']
-    assert_equal 200, last_response.status
+    assert_equal 302, last_response.status
+
+    get last_response['Location']
     assert_includes last_response.body, "<p>Logged in as TestUser</p>"
     assert_includes last_response.body, %q(<input type="submit" value="Logout")
     refute_nil session[:user]
@@ -297,6 +299,9 @@ class Forum < Minitest::Test
 
     post last_response['Location'], { username: 'TestUser2', password: '12345678' }
     assert_equal 'Login successful.', session[:message]
+
+    get last_response['Location']
+    assert_equal 302, last_response.status
 
     get last_response['Location']
     assert_includes last_response.body, 'Logged in as TestUser2'

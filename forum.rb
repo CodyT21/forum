@@ -35,7 +35,8 @@ end
 def require_user_signin
   unless user_signed_in?
     session[:message] = 'You must be signed in to perform this action.'
-    redirect '/'
+    session[:referrer] = request.path_info
+    redirect '/users/login'
   end
 end
 
@@ -205,7 +206,12 @@ get '/posts/:post_id/edit' do
   @post = @storage.find_post(post_id)
 
   if @post
-    erb :edit_post
+    if @post[:author_id] == @user[:id]
+      erb :edit_post
+    else
+      session[:message] = 'Access denied. You are not the creator of this content.'
+      redirect '/posts'
+    end
   else
     session[:message] = 'Post does not exist.'
     redirect '/'
@@ -292,7 +298,7 @@ post '/users/login' do
     user = @storage.find_user(username)
     session[:user] = { id: user[:id], username: user[:username] }
     session[:message] = 'Login successful.'
-    redirect '/posts'
+    redirect session.delete(:referrer)
   else
     session[:message] = 'Invalid username or password.'
     erb :login
