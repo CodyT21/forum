@@ -1,7 +1,9 @@
 <h2><%= @post[:title] %></h2>
 <p><%= @post[:content] %></p>
 <h3>Comments</h3>
-<% unless @post[:comments].empty? %>
+<% if @post[:comments].empty? %>
+  <p>No comments to display.</p>
+<% else %>
   <table style="border-spacing: 30px;">
     <thead>
       <tr>
@@ -36,9 +38,21 @@
       <% end %>
     </tbody>
   </table>
-<% else %>
-  <p>No comments to display.</p>
 <% end %>
+
+<div>
+  <% if @page > 1 %>
+    <a href="/posts/<%= @post[:id] %>/comments"><button>First</button></a>
+    <a href="/posts/<%= @post[:id] %>/comments?page=<%= @page - 1 %>"><button>Previous</button></a>
+    <% if @page < @last_page %>
+      <a href="/posts/<%= @post[:id] %>/comments?page=<%= @page + 1 %>"><button>Next</button></a>
+      <a href="/posts/<%= @post[:id] %>/comments?page=<%= @last_page %>"><button>Last</button></a>
+    <% end %>
+  <% else %>
+    <a href="/posts/<%= @post[:id] %>/comments?page=<%= @page + 1 %>"><button>Next</button></a>
+    <a href="/posts/<%= @post[:id] %>/comments?page=<%= @last_page %>"><button>Last</button></a>
+  <% end %>
+</div>
 
 <h3>Add a Comment</h2>
 <form action="/posts/<%= @post[:id] %>/comments" method="post">

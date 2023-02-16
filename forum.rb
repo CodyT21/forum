@@ -80,16 +80,17 @@ get '/' do
 end
 
 get '/posts' do
-  page = params[:page] ? params[:page].to_i : 1
+  @page = params[:page] ? params[:page].to_i : 1
 
   num_posts = @storage.num_posts
   num_to_display = 5
+  @last_page = (num_posts / num_to_display) + 1
 
-  if page * num_to_display > num_posts && page > 1
+  if @page > @last_page
     session[:message] = 'Page number does not exists.'
     redirect '/posts'
   else
-    offset = (page - 1) * num_to_display
+    offset = (@page - 1) * num_to_display
     @posts = @storage.find_posts(num_to_display, offset)
   end
 
@@ -113,9 +114,23 @@ get '/posts/:post_id/comments' do
   require_user_signin
 
   post_id = params[:post_id].to_i
-  @post = @storage.find_post(post_id)
+  post_ids = @storage.find_posts.map { |p| p[:id] }
 
-  if @post
+  if post_ids.include?(post_id)
+    @page = params[:page] ? params[:page].to_i : 1
+
+    num_comments = post_ids.size
+    num_to_display = 5
+    @last_page = (num_comments / num_to_display) + 1
+
+    if @page > @last_page
+      session[:message] = 'Page number does not exists.'
+      redirect "/posts/#{post_id}/comments"
+    else
+      offset = (@page - 1) * num_to_display
+      @post = @storage.find_post(post_id, num_to_display, offset)
+    end
+    
     erb :post
   else
     session[:message] = 'Post does not exist.'
@@ -131,6 +146,7 @@ post '/posts/:post_id/comments' do
   error = error_for_comment(comment)
   if error
     @post = @storage.find_post(post_id)
+    @page = 1   ####COULD BE CLEANER!!!!!!!!!!!!
     session[:message] = error
     erb :post
   else

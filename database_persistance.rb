@@ -3,7 +3,7 @@ require_relative 'database_connection'
 class DatabasePersistance
   include DatabaseConnection
 
-  def find_posts(limit, offset)
+  def find_posts(limit=nil, offset=nil)
     sql = <<~SQL
       SELECT p.*, u.username
         FROM posts p
@@ -28,7 +28,7 @@ class DatabasePersistance
     result.first['num_posts'].to_i || 0
   end
 
-  def find_post(post_id)
+  def find_post(post_id, limit=nil, offset=nil)
     sql = <<~SQL
       SELECT p.*, u.username
         FROM posts p
@@ -39,7 +39,7 @@ class DatabasePersistance
     return if result.ntuples == 0
 
     post_hash = tuple_to_hash_for_post(result.first)
-    post_hash[:comments] = find_post_comments(post_id)
+    post_hash[:comments] = find_post_comments(post_id, limit, offset)
     post_hash
   end
 
@@ -134,15 +134,16 @@ class DatabasePersistance
 
   private
 
-  def find_post_comments(post_id)
+  def find_post_comments(post_id, limit, offset)
     sql = <<~SQL
       SELECT c.*, u.username 
         FROM comments c
         INNER JOIN users u ON c.author_id = u.id
         WHERE post_id = $1
         ORDER BY update_date DESC
+        LIMIT $2 OFFSET $3
     SQL
-    result = query(sql, post_id)
+    result = query(sql, post_id, limit, offset)
     return [] if result.ntuples == 0
 
     result.map do |tuple|

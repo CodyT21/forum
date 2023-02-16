@@ -38,6 +38,21 @@
     </tbody>
   </table>
 <% end %>
+
+<div>
+  <% if @page > 1 %>
+    <a href="/posts"><button>First</button></a>
+    <a href="/posts?page=<%= @page - 1 %>"><button>Previous</button></a>
+    <% if @page < @last_page %>
+      <a href="/posts?page=<%= @page + 1 %>"><button>Next</button></a>
+      <a href="/posts?page=<%= @last_page %>"><button>Last</button></a>
+    <% end %>
+  <% else %>
+    <a href="/posts?page=<%= @page + 1 %>"><button>Next</button></a>
+    <a href="/posts?page=<%= @last_page %>"><button>Last</button></a>
+  <% end %>
+</div>
+
 <a href="/posts/new"><button>Create New Post</button></a>
 
 <% content_for :footer_login do %>
