@@ -317,4 +317,76 @@ class Forum < Minitest::Test
     post '/users', { username: 'T', password: '12345678' }
     assert_includes last_response.body, 'Username must be between 2 and 50 characters in length.'
   end
+  
+  def test_login_redirect_to_original_route
+    get '/posts/1/comments'
+    assert_equal 302, last_response.status
+    assert_equal 'You must be signed in to perform this action.'
+    
+    get last_response['Location']
+    assert_includes last_response.body, %q(<input name="username" type="text" value="">)
+    assert_includes last_response.body, %q(<input name="password" type="password" value="")
+    
+    post '/users/login', { username: 'TestUser', password: 'password' }
+    assert_equal 302, last_response.status
+    assert_equal 'Login successful.', session[:message]
+    
+    get last_response['Location']
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, '<p>This is a test post.</p>'
+  end
+  
+  def test_redirect_invalid_user_edit_content
+    add_new_user('TestUser2', 'password')
+    
+    get '/posts/1/edit', {}, test_user_session('TestUser2', 'password')
+    assert_equal 302, last_response.status
+    assert_equal 'Access denied. You are not the creator of this content.', session[:message]
+  end
+  
+  def test_post_pagination
+    (2..10).each { |post_num| @db.add_post("Test Post #{post_num}", 'Test post content.', 1) }
+    
+    get '/posts', {}, test_user_session
+    assert_includes last_response.body, 'Test Post 5'
+    refute_includes last_response.body, 'Test Post 10'
+    assert_includes last_response.body, '<button>Next</button>'
+    assert_includes last_response.body, '<button>Last</button>'
+    refute_includes last_response.body, '<button>Previous</button>'
+    refute_includes last_response.body, '<button>First</button>'
+    
+    get '/posts?page=2'
+    assert_includes last_response.body, 'Test Post 10'
+    refute includes last_response.body, 'Test Post 5'
+    assert_includes last_response.body, '<button>Previous</button>'
+    assert_includes last_response.body, '<button>First</button>'
+    refute_includes last_response.body, '<button>Next</button>'
+    refute_includes last_response.body, '<button>Last</button>'
+  end
+  
+  def test_invalid_page
+    get '/posts?page=2', {}, test_user_session
+    assert_equal 302, last_response.status
+    assert_includes last_response.body, 'Page number does not exists.'
+  end
+  
+  def test_comment_pagination
+    (2..10).each { |comment_num| @db.add_comment(1, 1, "Test comment #{comment_num}") }
+    
+    get '/posts/1/comments', {}, test_user_session
+    assert_includes last_response.body, 'Test comment 5'
+    refute_includes last_response.body, 'Test comment 10'
+    assert_includes last_response.body, '<button>Next</button>'
+    assert_includes last_response.body, '<button>Last</button>'
+    refute_includes last_response.body, '<button>Previous</button>'
+    refute_includes last_response.body, '<button>First</button>'
+    
+    get '/posts/1/comments?page=2'
+    assert_includes last_response.body, 'Test comment 10'
+    refute includes last_response.body, 'Test comment 5'
+    assert_includes last_response.body, '<button>Previous</button>'
+    assert_includes last_response.body, '<button>First</button>'
+    refute_includes last_response.body, '<button>Next</button>'
+    refute_includes last_response.body, '<button>Last</button>'
+  end
 end
