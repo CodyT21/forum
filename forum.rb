@@ -84,7 +84,8 @@ get '/posts' do
 
   num_posts = @storage.num_posts
   num_to_display = 5
-  @last_page = (num_posts / num_to_display) + 1
+  @last_page = (num_posts / num_to_display)
+  @last_page += 1 unless num_posts % num_to_display == 0 && num_posts > 0
 
   if @page > @last_page
     session[:message] = 'Page number does not exists.'
@@ -121,7 +122,8 @@ get '/posts/:post_id/comments' do
 
     num_comments = post_ids.size
     num_to_display = 5
-    @last_page = (num_comments / num_to_display) + 1
+    @last_page = (num_comments / num_to_display)
+    @last_page += 1 unless num_comments % num_to_display == 0
 
     if @page > @last_page
       session[:message] = 'Page number does not exists.'
