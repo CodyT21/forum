@@ -9,7 +9,7 @@ CREATE TABLE posts (
   title varchar(100) NOT NULL,
   content text NOT NULL,
   creation_date TIMESTAMP NOT NULL DEFAULT NOW()::TIMESTAMP(0),
-  update_date TIMESTAMP,
+  update_date TIMESTAMP NOT NULL DEFAULT NOW()::TIMESTAMP(0),
   author_id integer NOT NULL REFERENCES users (id)
 );
 
@@ -18,6 +18,6 @@ CREATE TABLE comments (
   post_id integer NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
   content text NOT NULL,
   creation_date TIMESTAMP NOT NULL DEFAULT NOW()::TIMESTAMP(0),
-  update_date TIMESTAMP,
+  update_date TIMESTAMP NOT NULL DEFAULT NOW()::TIMESTAMP(0),
   author_id integer NOT NULL REFERENCES users (id)
 );

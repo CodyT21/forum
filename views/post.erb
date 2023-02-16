@@ -14,14 +14,14 @@
     <tbody>
       <% @post[:comments].each do |comment| %>
         <tr>
-          <td><%= comment[:content] %></td>
+          <td><p><%= comment[:content] %></p></td>
           <td><%= comment[:author] %></td>
           <td><%= comment[:date] %></td>
           <td>
-            <% if comment[:update_date] %>
-              <%= comment[:update_date] %>
+            <% if comment[:update_date] == comment[:date] %>
+              <p>N&#47A</p>
             <% else %>
-              <%= comment[:date] %>
+              <%= comment[:update_date] %>
             <% end %>
           </td>
           <% if @user[:id] == comment[:author_id] %>

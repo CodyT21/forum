@@ -80,7 +80,18 @@ get '/' do
 end
 
 get '/posts' do
-  @posts = @storage.find_posts
+  page = params[:page] ? params[:page].to_i : 1
+
+  num_posts = @storage.num_posts
+  num_to_display = 5
+
+  if page * num_to_display > num_posts && page > 1
+    session[:message] = 'Page number does not exists.'
+    redirect '/posts'
+  else
+    offset = (page - 1) * num_to_display
+    @posts = @storage.find_posts(num_to_display, offset)
+  end
 
   erb :posts
 end
@@ -115,7 +126,7 @@ end
 # Add a new comment to a post
 post '/posts/:post_id/comments' do
   post_id = params[:post_id].to_i
-  comment = params[:content].strip
+  comment = params[:content]
   
   error = error_for_comment(comment)
   if error
@@ -134,7 +145,7 @@ end
 # Add a new post
 post '/posts' do
   title = params[:title].strip
-  content = params[:content].strip
+  content = params[:content]
 
   error = error_for_post(title, content)
   if error
@@ -229,7 +240,7 @@ end
 post '/posts/:post_id/comments/:comment_id' do
   post_id = params[:post_id].to_i
   comment_id = params[:comment_id].to_i
-  content = params[:content].strip
+  content = params[:content]
   user_id = params[:user_id].to_i
   @post = @storage.find_post(post_id)
   @comment = @storage.find_comment(comment_id)

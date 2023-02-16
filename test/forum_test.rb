@@ -66,7 +66,7 @@ class Forum < Minitest::Test
     assert_equal 200, last_response.status
     assert_includes last_response.body, "<h2>#{post[:title]}</h2>"
     assert_includes last_response.body, "<p>#{post[:content]}</p>"
-    assert_includes last_response.body, "<td>#{comment[:content]}</td>"
+    assert_includes last_response.body, "<p>#{comment[:content]}</p>"
     assert_includes last_response.body, "<td>#{comment[:author]}</td>"
     assert_includes last_response.body, "<td>#{comment[:date]}</td>"
   end
@@ -162,7 +162,7 @@ class Forum < Minitest::Test
     
     comment = @db.find_comment(2)
     get last_response['Location']
-    assert_includes last_response.body, "<td>#{comment[:content]}</td>"
+    assert_includes last_response.body, "<p>#{comment[:content]}</p>"
   end
 
   def test_add_comment_invalid_content

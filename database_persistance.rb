@@ -3,19 +3,29 @@ require_relative 'database_connection'
 class DatabasePersistance
   include DatabaseConnection
 
-  def find_posts
+  def find_posts(limit, offset)
     sql = <<~SQL
-      SELECT p.*, u.id AS "user_id", u.username
+      SELECT p.*, u.username
         FROM posts p
         LEFT JOIN users u ON p.author_id = u.id
-        ORDER BY p.update_date DESC NULLS LAST, p.creation_date DESC
+        ORDER BY p.update_date DESC
+        LIMIT $1 OFFSET $2
     SQL
-    result = query(sql)
+    result = query(sql, limit, offset)
     return [] if result.ntuples == 0
 
     result.map do |tuple|
       tuple_to_hash_for_post(tuple)
     end
+  end
+
+  def num_posts
+    sql = <<~SQL
+      SELECT COUNT(id) AS "num_posts" 
+        FROM posts;
+    SQL
+    result = query(sql)
+    result.first['num_posts'].to_i || 0
   end
 
   def find_post(post_id)
@@ -130,7 +140,7 @@ class DatabasePersistance
         FROM comments c
         INNER JOIN users u ON c.author_id = u.id
         WHERE post_id = $1
-        ORDER BY update_date DESC NULLS LAST, creation_date DESC
+        ORDER BY update_date DESC
     SQL
     result = query(sql, post_id)
     return [] if result.ntuples == 0
@@ -146,7 +156,7 @@ class DatabasePersistance
       content: tuple['content'],
       date: tuple['creation_date'],
       update_date: tuple['update_date'],
-      author_id: tuple['user_id'].to_i,
+      author_id: tuple['author_id'].to_i,
       author: tuple['username'],
     }
   end

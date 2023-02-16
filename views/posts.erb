@@ -19,10 +19,10 @@
           <td><%= post[:author] %></td>
           <td><%= post[:date] %></td>
           <td>
-            <% if post[:update_date] %>
-              <%= post[:update_date] %>
+            <% if post[:update_date] == post[:date] %>
+              <p>N&#47A</p>
             <% else %>
-              <%= post[:date] %>
+              <%= post[:update_date] %>
             <% end %>
           </td>
           <% if @user[:id] == post[:author_id] %>
