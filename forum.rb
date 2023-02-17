@@ -54,13 +54,21 @@ def error_for_comment(comment)
 end
 
 def error_for_post(title, content)
-  if !(1..100).cover?(title.size)
+  if !valid_post_title(title)
     'Title must be between 1 and 100 characters.'
-  elsif content.size < 1
+  elsif !valid_post_content(content)
     'Posts must have at least one character of content.'
   else
     return
   end
+end
+
+def valid_post_title(title)
+  (1..100).cover?(title.size)
+end
+
+def valid_post_content(content)
+  content.size > 0
 end
 
 def error_for_new_user(username, password)
@@ -102,7 +110,7 @@ end
 # Render add new post page
 get '/posts/new' do
   require_user_signin
-
+  @post = { title: "", content: "" }
   erb :new_post
 end
 
@@ -169,6 +177,9 @@ post '/posts' do
   error = error_for_post(title, content)
   if error
     session[:message] = error
+    @post = {}
+    @post[:title] = valid_post_title(title) ? title : ""
+    @post[:content] = valid_post_content(content) ? content : "" 
     erb :new_post
   else
     author_id = params[:user_id].to_i
