@@ -8,7 +8,7 @@ class DatabasePersistance
       SELECT p.*, u.username
         FROM posts p
         LEFT JOIN users u ON p.author_id = u.id
-        ORDER BY p.update_date DESC
+        ORDER BY p.update_date DESC, p.id DESC
         LIMIT $1 OFFSET $2
     SQL
     result = query(sql, limit, offset)
@@ -64,6 +64,16 @@ class DatabasePersistance
   def delete_post(post_id)
     sql = "DELETE FROM posts WHERE id = $1"
     query(sql, post_id)
+  end
+
+  def num_comments(post_id)
+    sql = <<~SQL
+      SELECT COUNT(id) AS "num_comments"
+        FROM comments
+        WHERE post_id = $1
+    SQL
+    result = query(sql, post_id)
+    result.first['num_comments'].to_i || 0
   end
 
   def find_comment(comment_id)
@@ -140,7 +150,7 @@ class DatabasePersistance
         FROM comments c
         INNER JOIN users u ON c.author_id = u.id
         WHERE post_id = $1
-        ORDER BY update_date DESC
+        ORDER BY update_date DESC, c.id DESC
         LIMIT $2 OFFSET $3
     SQL
     result = query(sql, post_id, limit, offset)

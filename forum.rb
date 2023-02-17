@@ -121,10 +121,10 @@ get '/posts/:post_id/comments' do
   if post_ids.include?(post_id)
     @page = params[:page] ? params[:page].to_i : 1
 
-    num_comments = post_ids.size
+    num_comments = @storage.num_comments(post_id)
     num_to_display = 5
     @last_page = (num_comments / num_to_display)
-    @last_page += 1 unless num_comments % num_to_display == 0
+    @last_page += 1 unless num_comments % num_to_display == 0 && num_comments > 0
 
     if @page > @last_page
       session[:message] = 'Page number does not exists.'

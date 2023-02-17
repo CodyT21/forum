@@ -321,7 +321,7 @@ class Forum < Minitest::Test
   def test_login_redirect_to_original_route
     get '/posts/1/comments'
     assert_equal 302, last_response.status
-    assert_equal 'You must be signed in to perform this action.'
+    assert_equal 'You must be signed in to perform this action.', session[:message]
     
     get last_response['Location']
     assert_includes last_response.body, %q(<input name="username" type="text" value="">)
@@ -339,7 +339,7 @@ class Forum < Minitest::Test
   def test_redirect_invalid_user_edit_content
     add_new_user('TestUser2', 'password')
     
-    get '/posts/1/edit', {}, test_user_session('TestUser2', 'password')
+    get '/posts/1/edit', {}, test_user_session('TestUser2')
     assert_equal 302, last_response.status
     assert_equal 'Access denied. You are not the creator of this content.', session[:message]
   end
@@ -348,16 +348,16 @@ class Forum < Minitest::Test
     (2..10).each { |post_num| @db.add_post("Test Post #{post_num}", 'Test post content.', 1) }
     
     get '/posts', {}, test_user_session
-    assert_includes last_response.body, 'Test Post 5'
-    refute_includes last_response.body, 'Test Post 10'
+    assert_includes last_response.body, 'Test Post 10'
+    refute_includes last_response.body, 'Test Post 5'
     assert_includes last_response.body, '<button>Next</button>'
     assert_includes last_response.body, '<button>Last</button>'
     refute_includes last_response.body, '<button>Previous</button>'
     refute_includes last_response.body, '<button>First</button>'
     
     get '/posts?page=2'
-    assert_includes last_response.body, 'Test Post 10'
-    refute includes last_response.body, 'Test Post 5'
+    assert_includes last_response.body, 'Test Post 5'
+    refute_includes last_response.body, 'Test Post 10'
     assert_includes last_response.body, '<button>Previous</button>'
     assert_includes last_response.body, '<button>First</button>'
     refute_includes last_response.body, '<button>Next</button>'
@@ -367,23 +367,23 @@ class Forum < Minitest::Test
   def test_invalid_page
     get '/posts?page=2', {}, test_user_session
     assert_equal 302, last_response.status
-    assert_includes last_response.body, 'Page number does not exists.'
+    assert_equal 'Page number does not exists.', session[:message]
   end
   
   def test_comment_pagination
-    (2..10).each { |comment_num| @db.add_comment(1, 1, "Test comment #{comment_num}") }
+    (2..10).each { |comment_num| @db.add_comment_to_post(1, 1, "Test comment #{comment_num}") }
     
     get '/posts/1/comments', {}, test_user_session
-    assert_includes last_response.body, 'Test comment 5'
-    refute_includes last_response.body, 'Test comment 10'
+    assert_includes last_response.body, 'Test comment 10'
+    refute_includes last_response.body, 'Test comment 5'
     assert_includes last_response.body, '<button>Next</button>'
     assert_includes last_response.body, '<button>Last</button>'
     refute_includes last_response.body, '<button>Previous</button>'
     refute_includes last_response.body, '<button>First</button>'
     
     get '/posts/1/comments?page=2'
-    assert_includes last_response.body, 'Test comment 10'
-    refute includes last_response.body, 'Test comment 5'
+    assert_includes last_response.body, 'Test comment 5'
+    refute_includes last_response.body, 'Test comment 10'
     assert_includes last_response.body, '<button>Previous</button>'
     assert_includes last_response.body, '<button>First</button>'
     refute_includes last_response.body, '<button>Next</button>'
