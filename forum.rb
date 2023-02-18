@@ -23,7 +23,7 @@ end
 def valid_credentials?(username, password)
   credentials = @storage.find_user(username)
   return false unless credentials.key?(:username)
-    
+
   bcrypt_password = BCrypt::Password.new(credentials[:password])
   bcrypt_password == password
 end
@@ -33,24 +33,22 @@ def user_signed_in?
 end
 
 def require_user_signin
-  unless user_signed_in?
-    session[:message] = 'You must be signed in to perform this action.'
-    session[:referrer] = request.path_info
-    redirect '/users/login'
-  end
+  return if user_signed_in?
+
+  session[:message] = 'You must be signed in to perform this action.'
+  session[:referrer] = request.path_info
+  redirect '/users/login'
 end
 
 before do
-  @storage = DatabasePersistance.new()
+  @storage = DatabasePersistance.new
   @user = session[:user] || {}
 end
 
 def error_for_comment(comment)
-  if comment.size < 1
-    'Comment cannot be left empty.'
-  else
-    return
-  end
+  return unless comment.empty?
+
+  'Comment cannot be left empty.'
 end
 
 def error_for_post(title, content)
@@ -58,8 +56,6 @@ def error_for_post(title, content)
     'Title must be between 1 and 100 characters.'
   elsif !valid_post_content(content)
     'Posts must have at least one character of content.'
-  else
-    return
   end
 end
 
@@ -68,7 +64,7 @@ def valid_post_title(title)
 end
 
 def valid_post_content(content)
-  content.size > 0
+  !content.empty?
 end
 
 def error_for_new_user(username, password)
@@ -78,8 +74,6 @@ def error_for_new_user(username, password)
     "#{username} already exists. Please enter a different name."
   elsif password.size < 8
     'Password must be at least 8 characters long.'
-  else
-    return
   end
 end
 
@@ -94,7 +88,7 @@ get '/posts' do
   num_posts = @storage.num_posts
   num_to_display = 5
   @last_page = (num_posts / num_to_display)
-  @last_page += 1 unless num_posts % num_to_display == 0 && num_posts > 0
+  @last_page += 1 unless (num_posts % num_to_display).zero? && num_posts.positive?
 
   if @page > @last_page
     session[:message] = 'Page number does not exists.'
@@ -110,7 +104,7 @@ end
 # Render add new post page
 get '/posts/new' do
   require_user_signin
-  @post = { title: "", content: "" }
+  @post = { title: '', content: '' }
   erb :new_post
 end
 
@@ -132,7 +126,7 @@ get '/posts/:post_id/comments' do
     num_comments = @storage.num_comments(post_id)
     num_to_display = 5
     @last_page = (num_comments / num_to_display)
-    @last_page += 1 unless num_comments % num_to_display == 0 && num_comments > 0
+    @last_page += 1 unless (num_comments % num_to_display).zero? && num_comments.positive?
 
     if @page > @last_page
       session[:message] = 'Page number does not exists.'
@@ -141,7 +135,7 @@ get '/posts/:post_id/comments' do
       offset = (@page - 1) * num_to_display
       @post = @storage.find_post(post_id, num_to_display, offset)
     end
-    
+
     erb :post
   else
     session[:message] = 'Post does not exist.'
@@ -153,11 +147,12 @@ end
 post '/posts/:post_id/comments' do
   post_id = params[:post_id].to_i
   comment = params[:content]
-  
+
   error = error_for_comment(comment)
   if error
     @post = @storage.find_post(post_id)
-    @page = 1   ####COULD BE CLEANER!!!!!!!!!!!!
+    @page = 1 # COULD BE CLEANER!!!!!!!!!!!!
+    @last_page = 1 # COULDE BE CLEANER!!!!!!
     session[:message] = error
     erb :post
   else
@@ -178,8 +173,8 @@ post '/posts' do
   if error
     session[:message] = error
     @post = {}
-    @post[:title] = valid_post_title(title) ? title : ""
-    @post[:content] = valid_post_content(content) ? content : "" 
+    @post[:title] = valid_post_title(title) ? title : ''
+    @post[:content] = valid_post_content(content) ? content : ''
     erb :new_post
   else
     author_id = params[:user_id].to_i
@@ -194,7 +189,7 @@ end
 post '/posts/:post_id/delete' do
   post_id = params[:post_id].to_i
   @storage.delete_post(post_id)
-  session[:message] = "The post was successfully deleted."
+  session[:message] = 'The post was successfully deleted.'
 
   redirect '/posts'
 end
@@ -234,7 +229,6 @@ post '/posts/:post_id' do
   post_id = params[:post_id].to_i
   title = params[:title].strip
   content = params[:content].strip
-  user_id = params[:user_id].to_i
   @post = @storage.find_post(post_id)
 
   error = error_for_post(title, content)
@@ -245,7 +239,7 @@ post '/posts/:post_id' do
     if @post[:title] == title && @post[:content] == content
       session[:message] = 'The post was not changed.'
     else
-      @storage.update_post(post_id, title, content) 
+      @storage.update_post(post_id, title, content)
       session[:message] = 'The post was updated successfully.'
     end
     redirect '/posts'
@@ -281,7 +275,6 @@ post '/posts/:post_id/comments/:comment_id' do
   post_id = params[:post_id].to_i
   comment_id = params[:comment_id].to_i
   content = params[:content]
-  user_id = params[:user_id].to_i
   @post = @storage.find_post(post_id)
   @comment = @storage.find_comment(comment_id)
 
@@ -293,7 +286,7 @@ post '/posts/:post_id/comments/:comment_id' do
     if @comment[:content] == content
       session[:message] = 'The comment was not changed.'
     else
-      @storage.update_comment(comment_id, content) 
+      @storage.update_comment(comment_id, content)
       session[:message] = 'The comment was updated successfully.'
     end
     redirect "/posts/#{post_id}/comments"
@@ -327,7 +320,6 @@ post '/users/logout' do
   session[:message] = 'You have been logged out succesfully.'
   redirect '/posts'
 end
-
 
 # Render create user page
 get '/users/new' do
