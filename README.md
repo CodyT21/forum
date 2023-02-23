@@ -24,6 +24,7 @@ Navigate to the project directory. In the terminal, run the command 'psql < ./da
   - User 3
     - username: test_user_2
     - password: password
+
 Seed data was created by performing the actions to create users, posts, comments, and updates within the webapp prior to creating a database dump. Test posts 1 - 3 contain no comments and tests posts 4 - 6 contains comments from multiple different users, however test post 6 contains 6 comments to enable the comment pagination on this post. Test post 7 contains 11 comments to demonstrate the multiple page comment pagination. Test post 8 contains an updated comment to demonstrate the ordering of comments where most recently updated comments are shown before most recently created comments. Test posts 9 and 10 have updated posts to demonstrate the same ordering for posts. Test post 11 contains no comments, but demonstrates the multiple page post pagination.
 
 ### Starting the Application ###
