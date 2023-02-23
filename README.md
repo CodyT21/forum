@@ -1,10 +1,33 @@
 # forum
 
 ## Project Description ##
-This is a basic forum that allow for displaying, creating, editing, and deleting new posts and associated comments. Posts and comments are both stored using a PostgreSQL relational database consisting of 3 tables: posts, comments, and users. Posts contain columns for a unique id, title, content, creation_date, update_date, and author_id. Comments contains columns for a unique id, content, creation_date, update_date, and author_id. Users contain columns for a unique id, unique username, and password which will contained a stored hash of the user password for better data protection.
+This is a basic forum that allow for displaying, creating, editing, and deleting new posts and associated comments. Posts and comments are both stored using a PostgreSQL relational database consisting of 3 tables: posts, comments, and users. Posts contain columns for a unique id, title, content, creation_date, update_date, and author_id. Comments contains columns for a unique id, content, creation_date, update_date, and author_id. Users contain columns for a unique id, unique username, and password which will contained a stored hash of the user password for better data protection. Posts and comments are both ordered by most recent update date, or if not yet been updated, by most recent creation date. A single page will display up to 5 posts or comments, otherwise pagination buttons will show to navigate through the additional post/comment pages. 
 
-User accounts consist of an unique user id, unique username, and a password, stored as a hashed value within the database using the BCrypt hashing algorithm. Editing and deleting posts and comments are only available if the current logged in user matches the author of the associated post/comment.
+User accounts consist of an unique user id, unique username, and a password, stored as a hashed value within the database using the BCrypt hashing function. Editing and deleting of posts and comments are only available if the current logged in user matches the author of the associated post/comment.
 
+
+## Application Specs ##
+  - Ruby Version 2.7.5
+  - Tested using Firefox Browser 109.0.1 (64-bit)
+  - PostgreSQL version 12.12
+
+
+## Installing the Application ##
+### Setting up the Database ###
+Navigate to the project directory. In the terminal, run the command 'psql < ./data/schema.sql'. This will create the database, the tables, and insert the seed data into the database. The seed data consists of 11 forum posts, each with varying numbers of comments from the different users, and 3 users with the following login credentials:
+  - User 1
+    - username: admin
+    - password: password
+  - User 2
+    - username: test_user
+    - password: 12345678
+  - User 3
+    - username: test_user_2
+    - password: password
+Seed data was created by performing the actions to create users, posts, comments, and updates within the webapp prior to creating a database dump. Test posts 1 - 3 contain no comments and tests posts 4 - 6 contains comments from multiple different users, however test post 6 contains 6 comments to enable the comment pagination on this post. Test post 7 contains 11 comments to demonstrate the multiple page comment pagination. Test post 8 contains an updated comment to demonstrate the ordering of comments where most recently updated comments are shown before most recently created comments. Test posts 9 and 10 have updated posts to demonstrate the same ordering for posts. Test post 11 contains no comments, but demonstrates the multiple page post pagination.
+
+### Starting the Application ###
+Change the current working directory to the project directory and run the 'bundle install' command to install the required Ruby Gems. To start up the application locally, run 'bundle exec ruby forum.rb', then in the browser, enter the url 'localhose:4567/post' to load the app in the browser.
 
 ## Steps to Use the Forum App ##
 ### User Creation and Login/Logout ###
@@ -27,3 +50,9 @@ Clicking on the post title will open the page to display the full post with its 
 
 ### Editing or Deleting a Comment ###
 Manipulating existing comments works in much the same way to posts. These buttons will only be availble if the current logged in user has an id that matches the author_id of the comment. Deleting comments will only delete the associated comment, but the original post will be retained.
+
+
+## Design Limitations
+  - Updates to comments are not reflected in the corresponding post's 'Last Updated' date. This field is only updated for posts if the post title or content is changed.
+  - User creation is lacking in its implementation. It only offers the ability to create very basic users consisting of a username and a password. No other user information is stored and user login credentials cannot be changed at this time, although implementation would work similar to how post and comment edits are handled.
+  - Lack of CSS to improve the look of displaying posts/comments.
