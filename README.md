@@ -14,7 +14,9 @@ User accounts consist of an unique user id, unique username, and a password, sto
 
 ## Installing the Application ##
 ### Setting up the Database ###
-Navigate to the project directory. In the terminal, run the command 'psql < ./data/schema.sql'. This will create the database, the tables, and insert the seed data into the database. The seed data consists of 11 forum posts, each with varying numbers of comments from the different users, and 3 users with the following login credentials:
+Navigate to the project directory. In the terminal, run the command 'pg_restore -C -d postgres ./data/forum.dump'. This will restore the database dump. The database and tables will be created, and seed data will automatically be inserted. 
+
+The seed data consists of 11 forum posts, each with varying numbers of comments from the different users, and 3 users with the following login credentials:
   - User 1
     - username: admin
     - password: password
@@ -28,7 +30,7 @@ Navigate to the project directory. In the terminal, run the command 'psql < ./da
 Seed data was created by performing the actions to create users, posts, comments, and updates within the webapp prior to creating a database dump. Test posts 1 - 3 contain no comments and tests posts 4 - 6 contains comments from multiple different users, however test post 6 contains 6 comments to enable the comment pagination on this post. Test post 7 contains 11 comments to demonstrate the multiple page comment pagination. Test post 8 contains an updated comment to demonstrate the ordering of comments where most recently updated comments are shown before most recently created comments. Test posts 9 and 10 have updated posts to demonstrate the same ordering for posts. Test post 11 contains no comments, but demonstrates the multiple page post pagination.
 
 ### Starting the Application ###
-Change the current working directory to the project directory and run the 'bundle install' command to install the required Ruby Gems. To start up the application locally, run 'bundle exec ruby forum.rb', then in the browser, enter the url 'localhose:4567/post' to load the app in the browser.
+Once the database has been set up using the above command, run the 'bundle install' command to install the required Ruby Gems. To start up the application locally, run 'bundle exec ruby forum.rb', then in the browser, enter the url 'localhose:4567/post' to load the app in the browser.
 
 ## Steps to Use the Forum App ##
 ### User Creation and Login/Logout ###
