@@ -24,8 +24,4 @@ module DatabaseConnection
     @db.exec("DELETE FROM users;")
     @db.exec("ALTER SEQUENCE users_id_seq RESTART WITH 1;")
   end
-
-  def disconnect
-    @db.close
-  end
 end
