@@ -41,7 +41,7 @@ def require_user_signin
 end
 
 before do
-  @storage = DatabasePersistance.new
+  @storage = DatabasePersistance.new(logger)
   @user = session[:user] || {}
 end
 
