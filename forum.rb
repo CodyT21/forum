@@ -151,9 +151,14 @@ post '/posts/:post_id/comments' do
   error = error_for_comment(comment)
   if error
     @post = @storage.find_post(post_id)
-    @page = 1 # COULD BE CLEANER!!!!!!!!!!!!
-    @last_page = 1 # COULDE BE CLEANER!!!!!!
+    @page = 1
+    num_comments = @storage.num_comments(post_id)
+    num_to_display = 5
+    @last_page = (num_comments / num_to_display)
+    @last_page += 1 unless (num_comments % num_to_display).zero? && num_comments.positive?
+    
     session[:message] = error
+    status 422
     erb :post
   else
     author_id = params[:user_id].to_i
@@ -175,6 +180,7 @@ post '/posts' do
     @post = {}
     @post[:title] = valid_post_title(title) ? title : ''
     @post[:content] = valid_post_content(content) ? content : ''
+    status 422
     erb :new_post
   else
     author_id = params[:user_id].to_i
@@ -234,6 +240,7 @@ post '/posts/:post_id' do
   error = error_for_post(title, content)
   if error
     session[:message] = error
+    status 422
     erb :edit_post
   else
     if @post[:title] == title && @post[:content] == content
@@ -281,6 +288,7 @@ post '/posts/:post_id/comments/:comment_id' do
   error = error_for_comment(content)
   if error
     session[:message] = error
+    status 422
     erb :edit_comment
   else
     if @comment[:content] == content
@@ -334,6 +342,7 @@ post '/users' do
   error = error_for_new_user(username, password)
   if error
     session[:message] = error
+    status 422
     erb :new_user
   else
     stored_hash = BCrypt::Password.create(password)
