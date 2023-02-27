@@ -8,8 +8,8 @@ require_relative 'database_persistance'
 configure do
   enable :sessions
   set :session_secret, 'secret'
-
   set :erb, :escape_html => true
+  set :num_items_to_display, 5
 end
 
 configure(:development) do
@@ -86,16 +86,15 @@ get '/posts' do
   @page = params[:page] ? params[:page].to_i : 1
 
   num_posts = @storage.num_posts
-  num_to_display = 5
-  @last_page = (num_posts / num_to_display)
-  @last_page += 1 unless (num_posts % num_to_display).zero? && num_posts.positive?
+  @last_page = (num_posts / settings.num_items_to_display)
+  @last_page += 1 unless (num_posts % settings.num_items_to_display).zero? && num_posts.positive?
 
   if @page > @last_page
     session[:message] = 'Page number does not exists.'
     redirect '/posts'
   else
-    offset = (@page - 1) * num_to_display
-    @posts = @storage.find_posts(num_to_display, offset)
+    offset = (@page - 1) * settings.num_items_to_display
+    @posts = @storage.find_posts(settings.num_items_to_display, offset)
   end
 
   erb :posts
@@ -124,16 +123,15 @@ get '/posts/:post_id/comments' do
     @page = params[:page] ? params[:page].to_i : 1
 
     num_comments = @storage.num_comments(post_id)
-    num_to_display = 5
-    @last_page = (num_comments / num_to_display)
-    @last_page += 1 unless (num_comments % num_to_display).zero? && num_comments.positive?
+    @last_page = (num_comments / settings.num_items_to_display)
+    @last_page += 1 unless (num_comments % settings.num_items_to_display).zero? && num_comments.positive?
 
     if @page > @last_page
       session[:message] = 'Page number does not exists.'
       redirect "/posts/#{post_id}/comments"
     else
-      offset = (@page - 1) * num_to_display
-      @post = @storage.find_post(post_id, num_to_display, offset)
+      offset = (@page - 1) * settings.num_items_to_display
+      @post = @storage.find_post(post_id, settings.num_items_to_display, offset)
     end
 
     erb :post
@@ -150,10 +148,14 @@ post '/posts/:post_id/comments' do
 
   error = error_for_comment(comment)
   if error
-    @post = @storage.find_post(post_id)
-    @page = 1 # COULD BE CLEANER!!!!!!!!!!!!
-    @last_page = 1 # COULDE BE CLEANER!!!!!!
+    @page = 1
+    num_comments = @storage.num_comments(post_id)
+    @last_page = (num_comments / settings.num_items_to_display)
+    @last_page += 1 unless (num_comments % settings.num_items_to_display).zero? && num_comments.positive?
+    @post = @storage.find_post(post_id, settings.num_items_to_display, 0)
+
     session[:message] = error
+    status 422
     erb :post
   else
     author_id = params[:user_id].to_i
@@ -175,6 +177,7 @@ post '/posts' do
     @post = {}
     @post[:title] = valid_post_title(title) ? title : ''
     @post[:content] = valid_post_content(content) ? content : ''
+    status 422
     erb :new_post
   else
     author_id = params[:user_id].to_i
@@ -234,6 +237,7 @@ post '/posts/:post_id' do
   error = error_for_post(title, content)
   if error
     session[:message] = error
+    status 422
     erb :edit_post
   else
     if @post[:title] == title && @post[:content] == content
@@ -281,6 +285,7 @@ post '/posts/:post_id/comments/:comment_id' do
   error = error_for_comment(content)
   if error
     session[:message] = error
+    status 422
     erb :edit_comment
   else
     if @comment[:content] == content
@@ -334,6 +339,7 @@ post '/users' do
   error = error_for_new_user(username, password)
   if error
     session[:message] = error
+    status 422
     erb :new_user
   else
     stored_hash = BCrypt::Password.create(password)
