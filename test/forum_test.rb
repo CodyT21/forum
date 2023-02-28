@@ -94,11 +94,13 @@ class Forum < Minitest::Test
 
   def test_add_new_post_invalid_title
     post '/posts', { title: '', content: 'This is a new post.', user_id: 1 }, test_user_session
+    assert_equal 422, last_response.status
     assert_includes last_response.body, 'Title must be between 1 and 100 characters.'
   end
 
   def test_add_new_post_invalid_content
     post '/posts', { title: 'New Post', content: '', user_id: 1 }, test_user_session
+    assert_equal 422, last_response.status
     assert_includes last_response.body, 'Posts must have at least one character of content.'
   end
 
@@ -167,6 +169,7 @@ class Forum < Minitest::Test
 
   def test_add_comment_invalid_content
     post '/posts/1/comments', { content: '', user_id: 1 }, test_user_session
+    assert_equal 422, last_response.status
     assert_includes last_response.body, 'Comment cannot be left empty.'
   end
 
