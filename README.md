@@ -14,7 +14,9 @@ User accounts consist of an unique user id, unique username, and a password, sto
 
 ## Installing the Application ##
 ### Setting up the Database ###
-Navigate to the project directory. In the terminal, run the command 'pg_restore -C -d postgres ./data/forum.dump'. This will restore the database dump. The database and tables will be created, and seed data will automatically be inserted. 
+First create the database using the command 'createdb forum'. Upon loading the app starting page, the database schema will automatically be setup.
+
+Navigate to the project directory. To load the seed data, run the command 'psql -d forum < ./data/seed_data.sql' in the terminal. 
 
 The seed data consists of 11 forum posts, each with varying numbers of comments from the different users, and 3 users with the following login credentials:
   - User 1
