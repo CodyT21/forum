@@ -7,6 +7,7 @@ Posts and comments are both ordered by most recent update date, or if not yet be
 
 ### Design Choices ###
   - Database creation was left to executing the command manually in the terminal before starting the web app as this is what was done in the RB185 lessons.
+  - Only user creation was implemented so that the main collection and their individual objects had the full CRUD operations implementation to align with the project requirements
 
 
 ## Application Specs ##
