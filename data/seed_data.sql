@@ -16,34 +16,144 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+ALTER TABLE ONLY public.posts DROP CONSTRAINT posts_author_id_fkey;
+ALTER TABLE ONLY public.comments DROP CONSTRAINT comments_post_id_fkey;
+ALTER TABLE ONLY public.comments DROP CONSTRAINT comments_author_id_fkey;
+ALTER TABLE ONLY public.users DROP CONSTRAINT users_username_key;
+ALTER TABLE ONLY public.users DROP CONSTRAINT users_pkey;
+ALTER TABLE ONLY public.posts DROP CONSTRAINT posts_pkey;
+ALTER TABLE ONLY public.comments DROP CONSTRAINT comments_pkey;
+ALTER TABLE public.users ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.posts ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.comments ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE public.users_id_seq;
+DROP TABLE public.users;
+DROP SEQUENCE public.posts_id_seq;
+DROP TABLE public.posts;
+DROP SEQUENCE public.comments_id_seq;
+DROP TABLE public.comments;
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
+-- Name: comments; Type: TABLE; Schema: public; Owner: -
 --
 
-COPY public.users (id, username, password) FROM stdin;
-1	admin	$2a$12$Bs3hrVu0uAh25DqX2oMjOeP76LiL0979mJT7A5GpIAGVT/xUMdcV2
-2	test_user	$2a$12$4i9YE6oJQgaAllMz.MM0EOBRPONs3r7gvrCRd1vZs.ctQW1roJdD6
-3	test_user_2	$2a$12$g3/6fRIwxCkNbfzhSYN4Zenfgk/M3ZpRyVl0BnF10oTQdyg2NsDcu
-\.
+CREATE TABLE public.comments (
+    id integer NOT NULL,
+    post_id integer NOT NULL,
+    content text NOT NULL,
+    creation_date timestamp without time zone DEFAULT (now())::timestamp(0) without time zone NOT NULL,
+    update_date timestamp without time zone DEFAULT (now())::timestamp(0) without time zone NOT NULL,
+    author_id integer NOT NULL
+);
 
 
 --
--- Data for Name: posts; Type: TABLE DATA; Schema: public; Owner: -
+-- Name: comments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-COPY public.posts (id, title, content, creation_date, update_date, author_id) FROM stdin;
-5	Test Post 5	Test post 5 content.	2023-02-22 17:46:05	2023-02-22 17:46:05	2
-6	Test Post 6	Content for test post 6.	2023-02-22 17:47:41	2023-02-22 17:47:41	3
-7	Test Post 7	Content for test post 7.	2023-02-22 17:50:15	2023-02-22 17:50:15	1
-8	Test Post 8	Content for test post 8.	2023-02-22 17:50:27	2023-02-22 17:50:27	1
-11	Test Post 11	Content for test post 11.	2023-02-22 17:51:21	2023-02-22 17:51:21	1
-9	Test Post 9 - Title Updated	Test Post 9 content.	2023-02-22 17:50:40	2023-02-22 17:54:22	1
-10	Test Post 10	Test post 10 content. - Content updated	2023-02-22 17:51:02	2023-02-22 17:54:33	1
-1	Test Post 1	Test post 1 content.	2023-02-22 17:43:06	2023-02-22 17:43:06	1
-2	Test Post 2	Content for test post 2.	2023-02-22 17:43:30	2023-02-22 17:43:30	2
-3	Test Post 3	Test post 3 content.	2023-02-22 17:44:02	2023-02-22 17:44:02	3
-4	Test Post 4	Content for test post 4.	2023-02-22 17:44:37	2023-02-22 17:44:37	1
-\.
+CREATE SEQUENCE public.comments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.comments_id_seq OWNED BY public.comments.id;
+
+
+--
+-- Name: posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.posts (
+    id integer NOT NULL,
+    title character varying(100) NOT NULL,
+    content text NOT NULL,
+    creation_date timestamp without time zone DEFAULT (now())::timestamp(0) without time zone NOT NULL,
+    update_date timestamp without time zone DEFAULT (now())::timestamp(0) without time zone NOT NULL,
+    author_id integer NOT NULL
+);
+
+
+--
+-- Name: posts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.posts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.posts_id_seq OWNED BY public.posts.id;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    username character varying(50) NOT NULL,
+    password text NOT NULL
+);
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- Name: comments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments ALTER COLUMN id SET DEFAULT nextval('public.comments_id_seq'::regclass);
+
+
+--
+-- Name: posts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts ALTER COLUMN id SET DEFAULT nextval('public.posts_id_seq'::regclass);
+
+
+--
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
@@ -85,6 +195,36 @@ COPY public.comments (id, post_id, content, creation_date, update_date, author_i
 
 
 --
+-- Data for Name: posts; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.posts (id, title, content, creation_date, update_date, author_id) FROM stdin;
+5	Test Post 5	Test post 5 content.	2023-02-22 17:46:05	2023-02-22 17:46:05	2
+6	Test Post 6	Content for test post 6.	2023-02-22 17:47:41	2023-02-22 17:47:41	3
+7	Test Post 7	Content for test post 7.	2023-02-22 17:50:15	2023-02-22 17:50:15	1
+8	Test Post 8	Content for test post 8.	2023-02-22 17:50:27	2023-02-22 17:50:27	1
+11	Test Post 11	Content for test post 11.	2023-02-22 17:51:21	2023-02-22 17:51:21	1
+9	Test Post 9 - Title Updated	Test Post 9 content.	2023-02-22 17:50:40	2023-02-22 17:54:22	1
+10	Test Post 10	Test post 10 content. - Content updated	2023-02-22 17:51:02	2023-02-22 17:54:33	1
+1	Test Post 1	Test post 1 content.	2023-02-22 17:43:06	2023-02-22 17:43:06	1
+2	Test Post 2	Content for test post 2.	2023-02-22 17:43:30	2023-02-22 17:43:30	2
+3	Test Post 3	Test post 3 content.	2023-02-22 17:44:02	2023-02-22 17:44:02	3
+4	Test Post 4	Content for test post 4.	2023-02-22 17:44:37	2023-02-22 17:44:37	1
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.users (id, username, password) FROM stdin;
+1	admin	$2a$12$Bs3hrVu0uAh25DqX2oMjOeP76LiL0979mJT7A5GpIAGVT/xUMdcV2
+2	test_user	$2a$12$4i9YE6oJQgaAllMz.MM0EOBRPONs3r7gvrCRd1vZs.ctQW1roJdD6
+3	test_user_2	$2a$12$g3/6fRIwxCkNbfzhSYN4Zenfgk/M3ZpRyVl0BnF10oTQdyg2NsDcu
+\.
+
+
+--
 -- Name: comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
@@ -103,6 +243,62 @@ SELECT pg_catalog.setval('public.posts_id_seq', 11, true);
 --
 
 SELECT pg_catalog.setval('public.users_id_seq', 3, true);
+
+
+--
+-- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: posts posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
+-- Name: comments comments_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.users(id);
+
+
+--
+-- Name: comments comments_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: posts posts_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.users(id);
 
 
 --
