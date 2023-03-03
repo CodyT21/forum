@@ -8,6 +8,8 @@ Posts and comments are both ordered by most recent update date, or if not yet be
 ### Design Choices ###
   - Database creation was left to executing the command manually in the terminal before starting the web app as this is what was done in the RB185 lessons.
   - Only user creation was implemented so that the main collection and their individual objects had the full CRUD operations implementation to align with the project requirements
+  - Comments and posts share similar table columns names because they share very similar features. Looking back, it might make more sense to give some of the columns more unique names to help with improving clarity in the sql statements.
+  - Updates to comments are not reflected in the corresponding post's 'Last Updated' date. This field is only updated for posts if the post title or content is changed.
 
 
 ## Application Specs ##
@@ -59,9 +61,3 @@ Clicking on the post title will open the page to display the full post with its 
 
 ### Editing or Deleting a Comment ###
 Manipulating existing comments works in much the same way to posts. These buttons will only be availble if the current logged in user has an id that matches the author_id of the comment. Deleting comments will only delete the associated comment, but the original post will be retained.
-
-
-## Design Limitations
-  - Updates to comments are not reflected in the corresponding post's 'Last Updated' date. This field is only updated for posts if the post title or content is changed.
-  - User creation is lacking in its implementation. It only offers the ability to create very basic users consisting of a username and a password. No other user information is stored and user login credentials cannot be changed at this time, although implementation would work similar to how post and comment edits are handled.
-  - Lack of CSS to improve the look of displaying posts/comments.
