@@ -258,19 +258,19 @@ get '/posts/:post_id/comments/:comment_id/edit' do
   comment_id = params[:comment_id].to_i
   @post = @storage.find_post(post_id)
   @comment = @storage.find_comment(comment_id)
-  if @post && @comment
+  if !@post
+    session[:message] = 'Post does not exist.'
+    redirect '/posts'
+  elsif !@comment || @comment[:post_id] != post_id
+    session[:message] = 'Comment does not exist.'
+    redirect "/posts/#{post_id}/comments"
+  else
     if @comment[:author_id] == @user[:id]
       erb :edit_comment
     else
       session[:message] = 'Access denied. You are not the creator of this content.'
       redirect "/posts/#{post_id}/comments"
     end
-  elsif !@post
-    session[:message] = 'Post does not exist.'
-    redirect '/posts'
-  else
-    session[:message] = 'Comment does not exist.'
-    redirect "/posts/#{post_id}/comments"
   end
 end
 

@@ -178,7 +178,8 @@ class DatabasePersistance
       date: tuple['creation_date'],
       update_date: tuple['update_date'],
       author_id: tuple['author_id'].to_i,
-      author: tuple['username'] 
+      author: tuple['username'],
+      post_id: tuple['post_id'].to_i 
     }
   end
 end
