@@ -23,7 +23,7 @@ Posts and comments are both ordered by most recent update date, or if not yet be
 Change the current working directory to the project directory and create the database using the command `createdb forum` within the command line interface. Once the database is created, the web app can be started and blank tables will automatically be created. Alternatively, the tables and seed data can be inserted into the database by executing the command `psql -d forum < ./data/seed_data.sql`. A further description of the seed data is below. Seed data can be inserted before or after loading the web app for the first time.
 
 ### Starting the Application
-Once the database has been set up using the above command, execute the `bundle install` command to install the required Ruby Gems. Then start the WEBrick server by executing the command `bundle exec ruby forum.rb`. Within the browser, enter the url `localhose:4567/post` to load the app.
+Once the database has been set up using the above command, execute the `bundle install` command to install the required Ruby Gems. Then start the WEBrick server by executing the command `bundle exec ruby forum.rb`. Within the browser, enter the url `localhost:4567/posts` to load the app.
 
 #### Seed Data
 The seed data consists of 11 forum posts, each with varying numbers of comments from the different users, and 3 users with the following login credentials:
