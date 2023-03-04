@@ -17,9 +17,6 @@ configure(:development) do
   also_reload 'database_persistance.rb' if development?
 end
 
-helpers do
-end
-
 def valid_credentials?(username, password)
   credentials = @storage.find_user(username)
   return false unless credentials.key?(:username)
