@@ -43,16 +43,16 @@ before do
 end
 
 def error_for_comment(comment)
-  return unless comment.empty?
+  return unless comment.empty? || comment =~ /^\s+$/
 
-  'Comment cannot be left empty.'
+  'The comment cannot be left blank.'
 end
 
 def error_for_post(title, content)
   if !valid_post_title(title)
     'Title must be between 1 and 100 characters.'
   elsif !valid_post_content(content)
-    'Posts must have at least one character of content.'
+    'The post body cannot be left blank.'
   end
 end
 
@@ -61,7 +61,7 @@ def valid_post_title(title)
 end
 
 def valid_post_content(content)
-  !content.empty?
+  !(content.empty? || content =~ /^\s+$/)
 end
 
 def error_for_new_user(username, password)
