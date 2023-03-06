@@ -223,13 +223,13 @@ class Forum < Minitest::Test
   def test_invalid_post_id
     get '/posts/10/comments', {}, test_user_session
     assert_equal 302, last_response.status
-    assert_equal 'Post does not exist.', session[:message]
+    assert_equal 'Invalid post id. This post does not exist.', session[:message]
   end
   
   def test_invalid_comment_id
     get '/posts/1/comments/5/edit', {}, test_user_session
     assert_equal 302, last_response.status
-    assert_equal 'Comment does not exist.', session[:message]
+    assert_equal 'Invalid comment id. This comment does not exist.', session[:message]
   end
   
   def test_invalid_user_edit_or_delete_post

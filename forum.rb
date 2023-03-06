@@ -17,6 +17,11 @@ configure(:development) do
   also_reload 'database_persistance.rb' if development?
 end
 
+before do
+  @storage = DatabasePersistance.new(logger)
+  @user = session[:user] || {}
+end
+
 def valid_credentials?(username, password)
   credentials = @storage.find_user(username)
   return false unless credentials.key?(:username)
@@ -35,11 +40,6 @@ def require_user_signin
   session[:message] = 'You must be signed in to perform this action.'
   session[:referrer] = request.path_info
   redirect '/users/login'
-end
-
-before do
-  @storage = DatabasePersistance.new(logger)
-  @user = session[:user] || {}
 end
 
 def error_for_comment(comment)
@@ -74,6 +74,36 @@ def error_for_new_user(username, password)
   end
 end
 
+def validate_post_id(post_id)
+  if !(post_id =~ /^\d+$/)
+    session[:message] = 'Invalid post id. This post does not exist.'
+    redirect '/'
+  end
+
+  post = @storage.find_post(post_id.to_i)
+  if !post
+    session[:message] = 'Invalid post id. This post does not exist.'
+    redirect '/'
+  end
+
+  post
+end
+
+def validate_comment_id(comment_id, post_id)
+  if !(comment_id =~ /^\d+$/)
+    session[:message] = 'Invalid comment id. This comment does not exist.'
+    redirect "/posts/#{post_id}/comments"
+  end
+
+  comment = @storage.find_comment(comment_id.to_i)
+  if !comment || comment[:post_id] != post_id.to_i
+    session[:message] = 'Invalid comment id. This comment does not exist.'
+    redirect redirect "/posts/#{post_id}/comments"
+  end
+
+  comment
+end
+
 # Render home page
 get '/' do
   redirect '/posts'
@@ -106,15 +136,15 @@ end
 
 # Render individual post with comments
 get '/posts/:post_id' do
-  post_id = params[:post_id].to_i
+  post_id = params[:post_id]
   redirect "/posts/#{post_id}/comments"
 end
 
 get '/posts/:post_id/comments' do
   require_user_signin
 
-  post_id = params[:post_id].to_i
-  post_ids = @storage.find_posts.map { |p| p[:id] }
+  post_id = params[:post_id].strip
+  post_ids = @storage.find_posts.map { |p| p[:id].to_s }
 
   if post_ids.include?(post_id)
     @page = params[:page] ? params[:page].to_i : 1
@@ -133,7 +163,7 @@ get '/posts/:post_id/comments' do
 
     erb :post
   else
-    session[:message] = 'Post does not exist.'
+    session[:message] = 'Invalid post id. This post does not exist.'
     redirect '/'
   end
 end
@@ -208,19 +238,14 @@ end
 get '/posts/:post_id/edit' do
   require_user_signin
 
-  post_id = params[:post_id].to_i
-  @post = @storage.find_post(post_id)
+  post_id = params[:post_id].strip
+  @post = validate_post_id(post_id)
 
-  if @post
-    if @post[:author_id] == @user[:id]
-      erb :edit_post
-    else
-      session[:message] = 'Access denied. You are not the creator of this content.'
-      redirect '/posts'
-    end
+  if @post[:author_id] == @user[:id]
+    erb :edit_post
   else
-    session[:message] = 'Post does not exist.'
-    redirect '/'
+    session[:message] = 'Access denied. You are not the creator of this content.'
+    redirect '/posts'
   end
 end
 
@@ -251,23 +276,17 @@ end
 get '/posts/:post_id/comments/:comment_id/edit' do
   require_user_signin
 
-  post_id = params[:post_id].to_i
-  comment_id = params[:comment_id].to_i
-  @post = @storage.find_post(post_id)
-  @comment = @storage.find_comment(comment_id)
-  if !@post
-    session[:message] = 'Post does not exist.'
-    redirect '/posts'
-  elsif !@comment || @comment[:post_id] != post_id
-    session[:message] = 'Comment does not exist.'
-    redirect "/posts/#{post_id}/comments"
+  post_id = params[:post_id].strip
+  comment_id = params[:comment_id].strip
+  
+  @post = validate_post_id(post_id)
+  @comment = validate_comment_id(comment_id, post_id)
+
+  if @comment[:author_id] == @user[:id]
+    erb :edit_comment
   else
-    if @comment[:author_id] == @user[:id]
-      erb :edit_comment
-    else
-      session[:message] = 'Access denied. You are not the creator of this content.'
-      redirect "/posts/#{post_id}/comments"
-    end
+    session[:message] = 'Access denied. You are not the creator of this content.'
+    redirect "/posts/#{post_id}/comments"
   end
 end
 
